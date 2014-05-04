@@ -16,8 +16,6 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-
-
 import optparse
 import sys
 import os
@@ -1037,7 +1035,7 @@ class Pyp(object):
         @rtype: list<str>
         '''
         
-        if not self.history[self.n]['error'] and self.history[self.n]['output']: #if no errors, go forward 
+        if (not options.small) or (not self.history[self.n]['error'] and self.history[self.n]['output']): #if no errors, go forward 
             total_output = []
             for cm_tuple in self.cmd_split(cmd):#cm_tuple consists of commands and string format.cmd_split splits each command into terms.
                 string_format = cm_tuple[1] #how the results will eventually be formatted.
@@ -1049,7 +1047,10 @@ class Pyp(object):
                         print Colors.RED + "killed by user" + Colors.OFF
                         sys.exit()
                     except Exception, err:
-                        self.history[self.n]['error'] = Colors.RED + 'error: ' + str(err) + Colors.OFF, Colors.RED + cmd + Colors.OFF
+                        if options.small:
+                            self.history[self.n]['error'] = Colors.RED + 'error: ' + str(err) + Colors.OFF, Colors.RED + cmd + Colors.OFF
+                        else:
+                            raise err
                         break
                     #totals output for each cm
                     try:
@@ -1061,8 +1062,9 @@ class Pyp(object):
                     total_output.append(output)
 
                     #updates self.history dictionary
-                self.history[self.n]['string_format'].append(string_format)
-                   #generates printable output                 
+                if options.small: 
+                    self.history[self.n]['string_format'].append(string_format)
+                #generates printable output                 
             return total_output
 
     
@@ -1293,7 +1295,7 @@ class Pyp(object):
         
         return p
     
-    
+     
     def process(self, inputs, file_input, cmds, second_stream_input):
         '''
         takes primary data from input stream (can be string, array or dictionary), applies user commands to it, 
@@ -1352,6 +1354,46 @@ class Pyp(object):
         
             new_input = [self.history[x]['history'][-1] for x in self.history ] # takes last output as new input
             self.process(new_input, file_input, cmds, second_stream_input) #process new input
+
+    
+    def processLarge(self, inputs, file_input, cmds, second_stream_input):
+        '''
+        @param inputs: inputs from std-in or previous pyp eval
+        @type inputs: str,list
+        @param file_input: inputs from file
+        @type file_input: list
+        @param cmds: python commands to be evaluated
+        @type cmds: list<str>
+        @param second_stream_input: second stream input
+        @type second_stream_input: list<str>
+        '''
+    
+        #MAIN LOOP 
+        for i in inputs:
+            self.p = self.unlist_p(i) # p is main line variable being manipulated                            
+            
+            for cmd in cmds: #cmds are commands that will be executed on the input stream      
+
+                variables = {}
+                 
+                if type(self.p) in [str, PypStr]:                          # p is string    
+                    variables = self.string_splitter()
+                elif type(self.p) in [list, PypList]:                 # p is list of lists, constructs various joins 
+                    try:                                                   #for going from list to powerpipe
+                        variables = self.array_joiner()
+                    except:
+                        pass
+                        
+                # TODO: 
+                #variables.update(self.translate_preset_variables(original_input_set,file_input, second_stream_input)) #add incrementals
+                #variables.update(self.history[self.n]['original_splits']) # updates with original splits
+
+                variables['p'] = self.p
+
+                self.p = self.safe_eval(cmd, variables)[0]
+                
+            print str(self.p)
+
 
     def output(self, total_cmds):
         '''
@@ -1421,11 +1463,13 @@ class Pyp(object):
         elif options.no_input:
             pipe_input = ['']
         
-        else:
+        elif options.small:
             pipe_input = [x.rstrip() for x in sys.stdin.readlines() if x.strip()]
             if not pipe_input:
                 pipe_input = [''] #for using control d to activate comands with no input
-                
+        else:
+            return ([PypStr(x)] for x in sys.stdin)
+  
         rerun_file = open(rerun_path, 'w')
         rerun_file.write('\n'.join([str(x) for x in pipe_input]))
         rerun_file.close()
@@ -1466,10 +1510,13 @@ class Pyp(object):
 
         inputs = self.initilize_input() #figure out our input stream
 
-        self.process(inputs, file_input, cmds, second_stream_input,) #recursive processing to generate history dict
+       
 
-        self.output(cmds) #output text or execute commands from history dict
-        
+        if options.small:
+            self.process(inputs, file_input, cmds, second_stream_input,) #recursive processing to generate history dict
+            self.output(cmds) #output text or execute commands from history dict
+        else:
+            self.processLarge(inputs, file_input, cmds, second_stream_input,) #recursive processing to generate history dict
 
 
 
@@ -2169,13 +2216,14 @@ if __name__ == '__main__':
     parser.add_option("-b", "--blank_inputs", action='store', type='string', help="generate this number of blank input lines; useful for generating numbered lists with variable 'n'")
     parser.add_option("-n", "--no_input", action='store_true', help="use with command that generates output with no input; same as --dummy_input 1")
     parser.add_option("-k", "--keep_false", action='store_true', help="print blank lines for lines that test as False. default is to filter out False lines from the output")
-    parser.add_option("-r", "--rerun", action="store_true", help="rerun based on automatically cached data from the last run. use this after executing \"pyp\", pasting input into the shell, and hitting CTRL-D")
-    
+    parser.add_option("-r", "--rerun", action="store_true", help="rerun based on automatically cached data from the last run. use this after executing \"pyp\", pasting input into the shell, and hitting CTRL-D")    
+    parser.add_option("-L", "--large", dest='small', action="store_false", default=True, help="large file input.  Allows only single line operations.")
+
     (options, args) = parser.parse_args()
     
     if options.turn_off_color or options.execute: # overall color switch asap.
         Colors = NoColors
-    
+ 
     try:
         pyp = Pyp().main()
     except Exception, err:

@@ -17,7 +17,7 @@ Pyp, or The Pyed Piper, is an incredibly useful command line tool for:
 * Operations that aren't available in Unix/Linux, or aren't easy
 
 
-*Note: This is currently exactly verion 2.11 of pyp with the -L flag to process large (> 50,000 line) files.  Uses [generators](http://en.wikipedia.org/wiki/Generator_%28computer_programming%29#Python) internally.*
+*Note: This is currently exactly verion 2.12 of pyp with the -L flag to process large (> 50,000 line) files.  Uses [generators](http://en.wikipedia.org/wiki/Generator_%28computer_programming%29#Python) internally.*
 
 
 ####Usage

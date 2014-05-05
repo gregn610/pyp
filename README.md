@@ -1,4 +1,4 @@
-pyp - The Pyed Piper
+The Pyed Piper (pyp)
 ====================
 
 The original project page on Google Code here: http://code.google.com/p/pyp/

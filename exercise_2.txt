@@ -1,0 +1,3 @@
+/MyDocuments/examples/movie_directory/movie/2011_05_20/mymovie_frames.180.mov
+/MyDocuments/examples/movie_directry/frames/swin_is_the_man/tiff/swin@work.tiff
+/MyDocuments/examples/movie_directory/movie/2011_05_20/Cool Movie:swin-flight.mov

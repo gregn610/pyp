@@ -1,10 +1,35 @@
 pyp - The Pyed Piper
 ====================
 
-This is the __unofficial__ git mirror for the pyp project. The original project page can be found at http://code.google.com/p/pyp/.
+The original project page on Google Code here: http://code.google.com/p/pyp/
 
 Installation
 ------------
 
- - Pyp is now available from PyPI (http://pypi.python.org/pypi/pyp) and can be installed via `pip install pyp` or `easy_install install pyp`. 
- - Otherwise, the easiest way would be to pull the raw pyp script (https://raw.github.com/yuvadm/pyp/master/pyp) and link it to your favorite `bin` location.
+    pip install git+git://github.com/alexbyrnes/pyp.git
+
+
+#####Background
+
+Pyp, or The Pyed Piper, is an incredibly useful command line tool for:
+
+* High volume transformations of unstructured data
+* Operations that aren't available in Unix/Linux, or aren't easy
+
+*Note: This is currently exactly verion 2.11 of pyp with the -L flag to process large (> 50,000 line) files.  Uses [generators](http://en.wikipedia.org/wiki/Generator_%28computer_programming%29#Python) internally.*
+
+#####Usage
+
+    cat /tmp/very_large_file.csv | ./pyp -L " p.upper() | whitespace | p[:2] " > first_two_colums_uppercase.csv
+    
+    
+#####Roadmap
+
+* Better type handling
+* Error handling with row numbers
+ 
+
+    
+    
+    
+

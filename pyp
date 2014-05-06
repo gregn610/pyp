@@ -868,8 +868,11 @@ class Pyp(object):
         '''
        
         temp_joins = []
-
-        derived_string_format = self.history[self.n]['string_format'][-1]
+        
+        if options.small:
+            derived_string_format = self.history[self.n]['string_format'][-1]
+        else:
+            derived_string_format = '%s'
         len_derived_str_format = len(derived_string_format.strip('%').split('%'))
         if len(self.p) == len_derived_str_format:
             string_format = derived_string_format #normal output
@@ -1047,10 +1050,7 @@ class Pyp(object):
                         print Colors.RED + "killed by user" + Colors.OFF
                         sys.exit()
                     except Exception, err:
-                        if options.small:
-                            self.history[self.n]['error'] = Colors.RED + 'error: ' + str(err) + Colors.OFF, Colors.RED + cmd + Colors.OFF
-                        else:
-                            raise err
+                        self.history[self.n]['error'] = Colors.RED + 'error: ' + str(err) + Colors.OFF, Colors.RED + cmd + Colors.OFF
                         break
                     #totals output for each cm
                     try:
@@ -1375,7 +1375,7 @@ class Pyp(object):
             for cmd in cmds: #cmds are commands that will be executed on the input stream      
 
                 variables = {}
-                 
+
                 if type(self.p) in [str, PypStr]:                          # p is string    
                     variables = self.string_splitter()
                 elif type(self.p) in [list, PypList]:                 # p is list of lists, constructs various joins 
@@ -1390,9 +1390,13 @@ class Pyp(object):
 
                 variables['p'] = self.p
 
-                self.p = self.safe_eval(cmd, variables)[0]
+                self.p = self.unlist_p(self.safe_eval(cmd, variables))
                 
-            print str(self.p)
+                if self.p is False:
+                    continue
+
+            if self.p is not False:    
+                print self.array_tracer(self.p)
 
 
     def output(self, total_cmds):
@@ -1468,7 +1472,7 @@ class Pyp(object):
             if not pipe_input:
                 pipe_input = [''] #for using control d to activate comands with no input
         else:
-            return ([PypStr(x)] for x in sys.stdin)
+            return ([PypStr(x.strip())] for x in sys.stdin if x.strip())
   
         rerun_file = open(rerun_path, 'w')
         rerun_file.write('\n'.join([str(x) for x in pipe_input]))

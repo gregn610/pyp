@@ -873,6 +873,7 @@ class Pyp(object):
             derived_string_format = self.history[self.n]['string_format'][-1]
         else:
             derived_string_format = '%s'
+
         len_derived_str_format = len(derived_string_format.strip('%').split('%'))
         if len(self.p) == len_derived_str_format:
             string_format = derived_string_format #normal output
@@ -1391,21 +1392,37 @@ class Pyp(object):
 
                 variables['p'] = self.p
 
-                self.p = self.unlist_p(self.flatten_list(self.safe_eval(cmd, variables)))
+                #self.p = self.flatten_list(self.safe_eval(cmd, variables))
+                self.p = self.safe_eval(cmd, variables)
                 
                 if self.p is False:
                     continue
-
+            '''
             if self.p is not False:
-                output = self.array_tracer(self.p)
-                if output != '':
+                output = self.array_tracer(self.unlist_p(self.p))
+                if output != '': 
                     if type(self.p) in [str, PypStr]: 
                         print self.p
-                    elif type(self.p) in [list, PypList]:
+                    else: #type(self.p) in [list, PypList]:
                         print output
-		    else:
-                        # Output type not recognized
-                        pass
+            '''
+
+            self.p = self.unlist_p(self.p)
+
+            if self.p is False:
+                continue
+
+            if type(self.p) in [str, PypStr] and self.p != '': 
+                print self.p
+            elif type(self.p) in [list, PypList]:
+                output = []
+                for l in self.p:
+                    if type(l) in [list, PypList]:
+                        output.append(self.array_tracer(l))
+                    else:
+                        output.append(l)
+                if output != []:
+                    print self.array_tracer(output)
 
 
     def output(self, total_cmds):

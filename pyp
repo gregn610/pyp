@@ -1050,8 +1050,9 @@ class Pyp(object):
                         print Colors.RED + "killed by user" + Colors.OFF
                         sys.exit()
                     except Exception, err:
-                        self.history[self.n]['error'] = Colors.RED + 'error: ' + str(err) + Colors.OFF, Colors.RED + cmd + Colors.OFF
-                        break
+		    	if options.small:
+			    self.history[self.n]['error'] = Colors.RED + 'error: ' + str(err) + Colors.OFF, Colors.RED + cmd + Colors.OFF
+			break
                     #totals output for each cm
                     try:
                         if output is True : #allows truth tests
@@ -1390,13 +1391,21 @@ class Pyp(object):
 
                 variables['p'] = self.p
 
-                self.p = self.unlist_p(self.safe_eval(cmd, variables))
+                self.p = self.unlist_p(self.flatten_list(self.safe_eval(cmd, variables)))
                 
                 if self.p is False:
                     continue
 
-            if self.p is not False:    
-                print self.array_tracer(self.p)
+            if self.p is not False:
+                output = self.array_tracer(self.p)
+                if output != '':
+                    if type(self.p) in [str, PypStr]: 
+                        print self.p
+                    elif type(self.p) in [list, PypList]:
+                        print output
+		    else:
+                        # Output type not recognized
+                        pass
 
 
     def output(self, total_cmds):
@@ -2222,16 +2231,19 @@ if __name__ == '__main__':
     parser.add_option("-k", "--keep_false", action='store_true', help="print blank lines for lines that test as False. default is to filter out False lines from the output")
     parser.add_option("-r", "--rerun", action="store_true", help="rerun based on automatically cached data from the last run. use this after executing \"pyp\", pasting input into the shell, and hitting CTRL-D")    
     parser.add_option("-L", "--large", dest='small', action="store_false", default=True, help="large file input.  Allows only single line operations.")
-
+    parser.add_option("--DEBUG", dest='DEBUG', action="store_true", default=False, help="Debug mode.  Do not catch exceptions.")
+   
     (options, args) = parser.parse_args()
-    
+
     if options.turn_off_color or options.execute: # overall color switch asap.
         Colors = NoColors
- 
-    try:
+
+
+    if options.DEBUG:
         pyp = Pyp().main()
-    except Exception, err:
-        print Colors.RED + str(err) + Colors.OFF 
-   
-        
-        
+    else:
+        try:
+            pyp = Pyp().main()
+        except Exception, err:
+            print Colors.RED + str(err) + Colors.OFF
+

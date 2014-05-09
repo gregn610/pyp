@@ -27,6 +27,11 @@ import datetime
 import getpass
 import re
 
+from pprint import pprint
+
+#from pycallgraph import PyCallGraph
+#from pycallgraph.output import GraphvizOutput
+
 
 #try to import user customized classes if they exist. default is null class.
 try:
@@ -871,8 +876,9 @@ class Pyp(object):
         
         if options.small:
             derived_string_format = self.history[self.n]['string_format'][-1]
+        #TODO:
         else:
-            derived_string_format = '%s'
+            derived_string_format = self.string_format[-1]
 
         len_derived_str_format = len(derived_string_format.strip('%').split('%'))
         if len(self.p) == len_derived_str_format:
@@ -967,14 +973,14 @@ class Pyp(object):
                      'punctuation': """!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~""",
                      'str':(PypStr),
                              }        
-        
-        #removes nested entries from history
-        history = []
-        for hist in self.history[self.n]['history']:
-            if type(hist) in (list,PypList):
-                hist = self.unlist_p(hist)
-            history.append(hist)
-        presets['history'] = presets['h'] = history
+        if options.small:
+            #removes nested entries from history
+            history = []
+            for hist in self.history[self.n]['history']:
+                if type(hist) in (list,PypList):
+                    hist = self.unlist_p(hist)
+                history.append(hist)
+            presets['history'] = presets['h'] = history
         
         # file
         if options.text_file:
@@ -989,16 +995,19 @@ class Pyp(object):
             sp = second_stream_input[self.n]
         except IndexError:
             sp = ''
-        
+        except Exception:
+            sp = ''
+ 
         presets['sp'] = sp
 
-        #original input
-        if self.history[self.n]['output']:
-            presets['o'] = self.history[self.n]['history'][0]
+        if options.small:
+            #original input
+            if self.history[self.n]['output']:
+                presets['o'] = self.history[self.n]['history'][0]
             
-        else:
-            presets['o'] = ''
-        presets['original'] = presets['o']
+            else:
+                presets['o'] = ''
+            presets['original'] = presets['o']
          
         # p cleanup   
         p = self.p
@@ -1066,6 +1075,8 @@ class Pyp(object):
                     #updates self.history dictionary
                 if options.small: 
                     self.history[self.n]['string_format'].append(string_format)
+                else:
+                    self.string_format.append(string_format)
                 #generates printable output                 
             return total_output
 
@@ -1095,13 +1106,61 @@ class Pyp(object):
             elif power_pipe ==   'fpp' and file_input:
                 user_output =  [file_input[n]]
             elif power_pipe: #  power pipe variable is referenced, but does not exist.
-                print Colors.RED + "YOU'RE LIST VARIABLE DOES NOT EXIST: " + Colors.GREEN + power_pipe + Colors.OFF
+                print Colors.RED + "YOUR LIST VARIABLE DOES NOT EXIST: " + Colors.GREEN + power_pipe + Colors.OFF
                 sys.exit()
         except: #default output is null per line
             user_output =[' ']   
     
         return user_output
-    
+
+    def get_history(self, total_output):
+        '''
+        updates history dictionary with output from python evaluation
+        @param total_output: line output from eval
+        @type total_output: list<string>
+        @param second_stream_input: entire input from second string
+        @type second_stream_input: list<string>
+        @param file_input: entire input from file
+        @type file_input: list<string>
+        '''
+        hist = []
+
+        #marks null output, as '' except when output  is zero, poerpope, or we are printing out null lines
+        if (not total_output or not [x for x in total_output if x]) and total_output != [0]: #kill irrelevant output
+            
+            hist.append(False)
+            output = False
+        else: # good output
+            output_array = []
+            history_array = []
+            contains_list = False
+            #actual output is p or pp unless spp is invoked.
+            #TODO: 
+            #user_input = self.get_user_input(total_output, second_stream_input, file_input, power_pipe)
+            #self.kept_n = self.kept_n + 1 #only update if output is kept
+
+            user_input = total_output
+
+            #update history array
+            for out in total_output: # forms an array called_output array of strings or array_traced strings
+                history_array.append(out) # for feeding back to pipe
+                contains_list = True if type(out) not in [str, PypStr] else False
+            
+            #update actual output
+            for out in user_input:
+                output_array.append(self.array_tracer(out)) # for output
+
+            
+            output = self.string_format % (tuple(output_array))
+            ''' 
+            if contains_list: #this section prevents buildup of recursive lists.
+                hist.append(total_output) # just adds list to total output if list
+            else:
+                hist.append(self.string_format % (tuple(history_array))) # adds properly formatted string if string.
+            '''
+            return output
+
+
     def update_history(self, total_output,second_stream_input,file_input, power_pipe):
         '''
         updates history dictionary with output from python evaluation
@@ -1318,21 +1377,25 @@ class Pyp(object):
             self.n = -1 # overall line counter. will change to 0 asap.
             self.kept_n = 0 # counter of kept lines. needs to be avail for eval, so starts as 0
             cmd = cmds.pop(0)
+
             cmd, input_set,second_stream_input, file_input, power_pipe = self.format_input(cmd, inputs,second_stream_input, file_input)
+
             original_input_set = input_set[:]
+
             #MAIN LOOP 
             while input_set:
-                
                 self.p = self.unlist_p(input_set.pop(0)) # p is main line variable being manipulated                            
+
                 self.n = self.n + 1  # raises counters
                 variables = {}
-                
+
+                               
                 if not self.n in self.history: # initializes self.history dict for line
                     self.initialize_n()
                 else:
                     if self.p is False: #skip false output but n is updated
                         continue
-                
+                 
                 if type(self.p) in [ str, PypStr]:                          # p is string    
                     variables = self.string_splitter()
                     if not self.history[self.n]['original_splits']: #makes variables dealing with original input
@@ -1346,12 +1409,12 @@ class Pyp(object):
                     except:
                         pass
                         
-
                 variables.update(self.translate_preset_variables(original_input_set,file_input, second_stream_input)) #add incrementals
                 variables.update(self.history[self.n]['original_splits']) # updates with original splits
 
                 total_output = self.safe_eval(cmd, variables)
                 self.update_history(total_output,second_stream_input,file_input ,power_pipe)
+ 
             #takes output, feeds back into input
         
             new_input = [self.history[x]['history'][-1] for x in self.history ] # takes last output as new input
@@ -1373,7 +1436,10 @@ class Pyp(object):
         #MAIN LOOP 
         for i in inputs:
             self.p = self.unlist_p(i) # p is main line variable being manipulated                            
-            
+            self.n = 0
+            self.kept_n = 0 # counter of kept lines. needs to be avail for eval, so starts as 0
+
+            self.string_format = []    
             for cmd in cmds: #cmds are commands that will be executed on the input stream      
 
                 variables = {}
@@ -1386,44 +1452,37 @@ class Pyp(object):
                     except:
                         pass
                         
-                # TODO: 
-                #variables.update(self.translate_preset_variables(original_input_set,file_input, second_stream_input)) #add incrementals
+                
+                variables.update(self.translate_preset_variables(None, None, None)) #add incrementals
                 #variables.update(self.history[self.n]['original_splits']) # updates with original splits
 
                 variables['p'] = self.p
 
-                #self.p = self.flatten_list(self.safe_eval(cmd, variables))
-                self.p = self.safe_eval(cmd, variables)
+                self.p = self.unlist_p(self.safe_eval(cmd, variables))
                 
                 if self.p is False:
                     continue
-            '''
-            if self.p is not False:
-                output = self.array_tracer(self.unlist_p(self.p))
-                if output != '': 
-                    if type(self.p) in [str, PypStr]: 
-                        print self.p
-                    else: #type(self.p) in [list, PypList]:
-                        print output
-            '''
 
-            self.p = self.unlist_p(self.p)
-
+            
             if self.p is False:
                 continue
-
+            
             if type(self.p) in [str, PypStr] and self.p != '': 
                 print self.p
-            elif type(self.p) in [list, PypList]:
-                output = []
+            elif type(self.p) in [list, PypList] and self.p != []:
+                print '\t'.join(self.flatten_list(self.p))
+                #output = self.get_history(self.p)
+                #print output
+                '''
+                output = ''
                 for l in self.p:
                     if type(l) in [list, PypList]:
-                        output.append(self.array_tracer(l))
+                        output += self.array_tracer(l)
                     else:
-                        output.append(l)
-                if output != []:
+                        output += l
+                if output != '':
                     print self.array_tracer(output)
-
+                '''
 
     def output(self, total_cmds):
         '''
@@ -1438,10 +1497,16 @@ class Pyp(object):
             if not error or "list index out of range" in error[0] or  'string index out of range' in error[0] : #no error
                 
                 cmd = self.history[self.history_index]['output'] #color formated output
-                
+
                 if cmd: #kept commands
                     if options.execute: #executes command        
                         execute_cmds.append(cmd)
+                    elif options.delimited:
+                        oput = self.history[self.history_index]['history'][-1]             
+                        if type(oput) in [str, PypStr] and oput != '': 
+                            print oput
+                        elif type(oput) in [list, PypList]:
+                            print options.delimiter.join(self.flatten_list(oput))
                     else:
                         print cmd # normal output
                 elif options.keep_false: #prints blank lines for lost False commands 
@@ -1537,11 +1602,16 @@ class Pyp(object):
             cmds = self.cmds_split(args[0], macros)
 
         self.write_macros(action_macros, action_macros_path, cmds) #needs cmds before we write macros
-
+       
+    
         inputs = self.initilize_input() #figure out our input stream
 
-       
+        # For debugging
+        #graphviz = GraphvizOutput()
+        #graphviz.output_file = '/media/sf_Alex/pygraphm.png'
 
+        #with PyCallGraph(output=graphviz):
+         
         if options.small:
             self.process(inputs, file_input, cmds, second_stream_input,) #recursive processing to generate history dict
             self.output(cmds) #output text or execute commands from history dict
@@ -2249,12 +2319,13 @@ if __name__ == '__main__':
     parser.add_option("-r", "--rerun", action="store_true", help="rerun based on automatically cached data from the last run. use this after executing \"pyp\", pasting input into the shell, and hitting CTRL-D")    
     parser.add_option("-L", "--large", dest='small', action="store_false", default=True, help="large file input.  Allows only single line operations.")
     parser.add_option("--DEBUG", dest='DEBUG', action="store_true", default=False, help="Debug mode.  Do not catch exceptions.")
+    parser.add_option("-D", "--delimited", dest='delimited', action="store_true", default=False, help="Raw, tab delimited output.  No colors or index numbers.")
+    parser.add_option("-S", "--separated-by", dest='delimiter', type='string', default='\t', help="Delimiter for output.  Defaults to tab.")
    
     (options, args) = parser.parse_args()
 
     if options.turn_off_color or options.execute: # overall color switch asap.
         Colors = NoColors
-
 
     if options.DEBUG:
         pyp = Pyp().main()

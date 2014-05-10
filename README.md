@@ -35,7 +35,7 @@ Regular Expressions
     
 Compose multiple operations
 
-    cat v ery_large_file.csv | pyp -L " p.upper() | whitespace | p[:2] " > first_two_colums_uppercase.csv
+    cat very_large_file.csv | pyp -L " p.upper() | whitespace | p[:2] " > first_two_colums_uppercase.csv
       
 Many more examples in the manual, and in the test files test.sh and tests_orig.sh.
 

@@ -45,11 +45,9 @@ Many more examples in the manual, and in the test files test.sh and tests_orig.s
 
 ####Running the Tests
 
-The tests are currently just a list of commands comparing the original output to the -L flag ouput:
-
-    ./tests.sh > Ltests
-    ./tests_orig.sh > noLtests
-    diff Ltests noLtests #Should be blank    
+    nosetests
+    
+Or Travis-CI button above.
 
 
 #####New Features

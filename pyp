@@ -28,6 +28,9 @@ import getpass
 import re
 
 from pprint import pprint
+from pprint import pformat
+
+options = None
 
 #from pycallgraph import PyCallGraph
 #from pycallgraph.output import GraphvizOutput
@@ -389,7 +392,12 @@ class Pyp(object):
     @type n: int
     '''
     
-    def __init__(self):
+    def __init__(self, opts=None):
+        # For unit tests
+        if opts is not None:
+            global options
+            options = opts
+
         self.history = {} #dictionary of all data organized input line by input line
         try: #occasionally, python loses pwd info
             self.pwd = os.getcwd()
@@ -1047,7 +1055,7 @@ class Pyp(object):
         @return: output from python evaluation
         @rtype: list<str>
         '''
-        
+ 
         if (not options.small) or (not self.history[self.n]['error'] and self.history[self.n]['output']): #if no errors, go forward 
             total_output = []
             for cm_tuple in self.cmd_split(cmd):#cm_tuple consists of commands and string format.cmd_split splits each command into terms.
@@ -1432,7 +1440,7 @@ class Pyp(object):
         @param second_stream_input: second stream input
         @type second_stream_input: list<str>
         '''
-    
+       
         #MAIN LOOP 
         for i in inputs:
             self.p = self.unlist_p(i) # p is main line variable being manipulated                            
@@ -1464,12 +1472,12 @@ class Pyp(object):
                     continue
 
             
-            if self.p is False:
+            if self.p is False or self.p == '' or self.p == []:
                 continue
             
-            if type(self.p) in [str, PypStr] and self.p != '': 
+            if type(self.p) in [str, PypStr]: 
                 print self.p
-            elif type(self.p) in [list, PypList] and self.p != []:
+            elif type(self.p) in [list, PypList]:
                 print '\t'.join(self.flatten_list(self.p))
                 #output = self.get_history(self.p)
                 #print output
@@ -1483,6 +1491,8 @@ class Pyp(object):
                 if output != '':
                     print self.array_tracer(output)
                 '''
+            else:
+                 print str(self.p)
 
     def output(self, total_cmds):
         '''
@@ -1546,7 +1556,6 @@ class Pyp(object):
                     print Colors.RED + rerun_path + " does not exist" + Colors.OFF
                     sys.exit()
             pipe_input = [x.strip() for x in open(rerun_path) if x.strip()]
-            #print pipe_input
         
         elif options.blank_inputs:
             pipe_input = []
@@ -1595,7 +1604,7 @@ class Pyp(object):
         
         self.list_macros(macros)
         self.delete_macros(action_macros, action_macros_path)
-
+        
         if not args: # default command is just to print.
             cmds = ['p']
         else:
@@ -1603,15 +1612,14 @@ class Pyp(object):
 
         self.write_macros(action_macros, action_macros_path, cmds) #needs cmds before we write macros
        
-    
         inputs = self.initilize_input() #figure out our input stream
+        
 
         # For debugging
         #graphviz = GraphvizOutput()
         #graphviz.output_file = '/media/sf_Alex/pygraphm.png'
 
         #with PyCallGraph(output=graphviz):
-         
         if options.small:
             self.process(inputs, file_input, cmds, second_stream_input,) #recursive processing to generate history dict
             self.output(cmds) #output text or execute commands from history dict

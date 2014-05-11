@@ -1,6 +1,9 @@
 The Pyed Piper (pyp)
 ====================
 
+[![Build Status](https://travis-ci.org/alexbyrnes/pyp.png)](https://travis-ci.org/alexbyrnes/pyp)
+
+
 The original project page on Google Code here: http://code.google.com/p/pyp/
 
 Installation

@@ -195,7 +195,7 @@ class TestPypLargeFile(unittest.TestCase):
 
     def test_file(self):
         inputs = self._toPypStr(['/home/abc/foobar.txt', '/usr/local/helloworld.psd', 'barfoo.csv'])
-        argLine = ['p.file']
+        argLine = ['p.file()']
         expectedOut = 'foobar.txt\nhelloworld.psd\nbarfoo.csv\n'
 
         with patch('sys.stdout', new=BytesIO()) as cap_stdout:
@@ -204,7 +204,7 @@ class TestPypLargeFile(unittest.TestCase):
 
     def test_dir(self):
         inputs = self._toPypStr(['/home/abc/foobar.txt', '/usr/local/helloworld.psd', 'barfoo.csv'])
-        argLine = ['p.dir']
+        argLine = ['p.dir()']
         expectedOut = '/home/abc\n/usr/local\n'
 
         with patch('sys.stdout', new=BytesIO()) as cap_stdout:

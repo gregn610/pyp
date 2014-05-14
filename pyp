@@ -27,14 +27,6 @@ import datetime
 import getpass
 import re
 
-from pprint import pprint
-from pprint import pformat
-
-options = None
-
-#from pycallgraph import PyCallGraph
-#from pycallgraph.output import GraphvizOutput
-
 
 #try to import user customized classes if they exist. default is null class.
 try:
@@ -259,14 +251,37 @@ class PypStr(str,PypStrCustom):
         except AttributeError:
             pass
         
-        
+    def dir(self):
+        pdir = None
+
         try:
-            self.dir = os.path.split(self.rstrip('/'))[0]
-            self.file = os.path.split(self)[1]
-            self.ext = self.split('.')[-1]
+            pdir = PypStr(os.path.split(self.rstrip('/'))[0])
         except:
             pass
 
+        return pdir
+
+         
+    def file(self):
+        pfile = None
+
+        try:
+            pfile = os.path.split(self)[1]
+        except:
+            pass
+
+        return pfile
+
+    def ext(self):
+        pext = None
+
+        try:
+            pext = self.split('.')[-1]
+        except:
+            pass
+
+        return pext
+    
     def trim(self,delim='/'):
         '''
         returns everything but the last directory/file
@@ -980,7 +995,8 @@ class Pyp(object):
                      'digits': '0123456789',
                      'punctuation': """!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~""",
                      'str':(PypStr),
-                             }        
+                             }     
+  
         if options.small:
             #removes nested entries from history
             history = []
@@ -1068,9 +1084,9 @@ class Pyp(object):
                         print Colors.RED + "killed by user" + Colors.OFF
                         sys.exit()
                     except Exception, err:
-		    	if options.small:
-			    self.history[self.n]['error'] = Colors.RED + 'error: ' + str(err) + Colors.OFF, Colors.RED + cmd + Colors.OFF
-			break
+                        if options.small:
+                            self.history[self.n]['error'] = Colors.RED + 'error: ' + str(err) + Colors.OFF, Colors.RED + cmd + Colors.OFF
+                        break
                     #totals output for each cm
                     try:
                         if output is True : #allows truth tests
@@ -1535,7 +1551,7 @@ class Pyp(object):
         @return: starting input for pyp processing
         @rtype: list
         '''
-
+        
         if options.manual:
             print Docs.manual
             sys.exit()
@@ -2082,9 +2098,9 @@ class Docs():
         p.re(REGEX)          returns portion of string that matches REGEX regular 
                              expression. works great with p.replace(p.re(REGEX),STR) 
         
-        p.dir                directory of path
-        p.file               file name of path
-        p.ext                file extension (jpg, tif, hip, etc) of path
+        p.dir()                directory of path
+        p.file()               file name of path
+        p.ext()                file extension (jpg, tif, hip, etc) of path
        
         These fuctions will work with all pyp strings eg: p, o, dot[0], p.trim(), etc. 
         Strings returned by native python functions (like split()) won't have these 
@@ -2342,4 +2358,5 @@ if __name__ == '__main__':
             pyp = Pyp().main()
         except Exception, err:
             print Colors.RED + str(err) + Colors.OFF
+
 

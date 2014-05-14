@@ -50,9 +50,19 @@ Many more examples in the [manual](https://code.google.com/p/pyp/wiki/pyp_manual
 Or Travis-CI button above.
 
 
-#####New Features
+####Making the C version (requires Cython)
+
+    make test
+    
+This will output a binary `cyp` that is identical to pyp except faster and, theoretically, distributable.   
+
+
+#####What's New
 
 * -L flag for large (> 50,000 line) files
 * --DEBUG to debug output with line numbers and stack trace
 * -D to output tab delimited text.  The large file flag includes this automatically.  Add -S to specify the delimiter.
+* "cyp" compiled version
+* Optimizations -- p.file, p.dir, and p.ext moved to p.file(), p.dir(), p.ext() 
+
 

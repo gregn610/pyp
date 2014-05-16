@@ -54,7 +54,7 @@ Or Travis-CI button above.
 
     make test
     
-This will output a binary `cyp` that is identical to pyp except faster and, theoretically, distributable.   
+This will output a binary `cyp` and test it with a simple command.
 
 
 #####What's New

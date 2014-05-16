@@ -22,7 +22,7 @@ cyp.o: cyp.c
 
 CYTHON := cython
 cyp.c: pyp
-	@$(CYTHON) --embed cyp.pyx
+	@$(CYTHON) --embed pyp -o cyp.c
 
 all: cyp
 

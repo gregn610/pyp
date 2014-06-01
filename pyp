@@ -45,15 +45,17 @@ except ImportError :
 
 try:
     from PypCustom import PypStrCustom
-    HAVE_PypStrCustom=True
+    HAVE_PypStrCustom = True
 except ImportError  :
-    HAVE_PypStrCustom=False
+    HAVE_PypStrCustom = False
     class PypStrCustom():
         pass
         
 try :
     from PypCustom import PypListCustom
+    HAVE_PypListCustom = True
 except ImportError:
+    HAVE_PypListCustom = False
     class PypListCustom():
         pass
 
@@ -385,10 +387,9 @@ class PypList(list,PypListCustom):
     
     def __init__(self, *args):
         super(PypList, self).__init__(*args)
-        try:
+        if HAVE_PypListCustom:
             PypListCustom.__init__(self)
-        except AttributeError:
-            pass
+
 class Pyp(object):
     '''
     pyp engine. manipulates input stream using python methods

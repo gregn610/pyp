@@ -45,7 +45,9 @@ except ImportError :
 
 try:
     from PypCustom import PypStrCustom
+    HAVE_PypStrCustom=True
 except ImportError  :
+    HAVE_PypStrCustom=False
     class PypStrCustom():
         pass
         
@@ -248,10 +250,8 @@ class PypStr(str,PypStrCustom):
     '''
     def __init__(self, *args):
         super(PypStr, self).__init__()       
-        try:
+        if HAVE_PypStrCustom:
             PypStrCustom.__init__(self)  
-        except AttributeError:
-            pass
         
     @property
     def dir(self):

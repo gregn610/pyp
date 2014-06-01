@@ -253,13 +253,29 @@ class PypStr(str,PypStrCustom):
         except AttributeError:
             pass
         
-        
-        try:
-            self.dir = os.path.split(self.rstrip('/'))[0]
-            self.file = os.path.split(self)[1]
-            self.ext = self.split('.')[-1]
-        except:
-            pass
+    @property
+    def dir(self):
+        '''
+        @return: directory of path, like dirname
+        @rtype: PypStr
+        '''
+        return os.path.split(self.rstrip('/'))[0]
+
+    @property
+    def file(self):
+        '''
+        @return: file name of path, like basename
+        @rtype: PypStr
+        '''
+        return os.path.split(self)[1]
+
+    @property
+    def ext(self):
+        '''
+        @return: file extension
+        @rtype: PypStr
+        '''
+        return self.split('.')[-1]
 
     def trim(self,delim='/'):
         '''

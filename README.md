@@ -1,9 +1,6 @@
 The Pyed Piper (pyp)
 ====================
 
-[![Build Status](https://travis-ci.org/alexbyrnes/pyp.png)](https://travis-ci.org/alexbyrnes/pyp)
-
-
 The original project page on Google Code here: http://code.google.com/p/pyp/
 
 Installation
@@ -31,29 +28,32 @@ Pyp, or The Pyed Piper, is an incredibly useful command line tool for:
 Filters
 
     cat very_large_file.csv | pyp -L " len(p) > 5 " > only_long_lines.csv
-    
+
 Regular Expressions
 
     cat very_large_file.csv | pyp -L " p.re('[0-9a-fA-F]*') " > only_hex_digits.csv
-    
+
 Compose multiple operations
 
     cat very_large_file.csv | pyp -L " p.upper() | whitespace | p[:2] " > first_two_colums_uppercase.csv
-      
+
 Many more examples in the [manual](https://code.google.com/p/pyp/wiki/pyp_manual), and in examples.sh
 
 
 ####Running the Tests
 
-    nosetests
-    
-Or Travis-CI button above.
+    python setup.py test
+
+This will test pyp under multiple versions of python. If you only need to test
+a single version of python you can do this instead:
+
+    tox -e py27
 
 
 ####Making the C version (requires Cython)
 
     make test
-    
+
 This will output a binary `cyp` and test it with a simple command.
 
 
@@ -63,6 +63,6 @@ This will output a binary `cyp` and test it with a simple command.
 * --DEBUG to debug output with line numbers and stack trace
 * -D to output tab delimited text.  The large file flag includes this automatically.  Add -S to specify the delimiter.
 * "cyp" compiled version
-* Optimizations -- p.file, p.dir, and p.ext moved to p.file(), p.dir(), p.ext() 
+* Optimizations -- p.file, p.dir, and p.ext moved to p.file(), p.dir(), p.ext()
 
 

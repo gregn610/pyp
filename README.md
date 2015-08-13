@@ -47,7 +47,7 @@ Many more examples in the [manual](https://code.google.com/p/pyp/wiki/pyp_manual
 This will test pyp under multiple versions of python. If you only need to test
 a single version of python you can do this instead:
 
-    tox -e py27
+    python setup.py test -a "-epy27"
 
 
 ####Making the C version (requires Cython)

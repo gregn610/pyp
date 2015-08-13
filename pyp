@@ -32,6 +32,7 @@ import glob
 import tempfile
 import getpass
 import re
+import six
 
 from datetime import datetime
 
@@ -950,7 +951,7 @@ class Pyp(object):
         }
         # gets rid of empty fields
         split_variables = {}
-        for name, raw_variable in split_variables_raw.iteritems():
+        for name, raw_variable in six.iteritems(split_variables_raw):
             if raw_variable:
                 pyp_list = PypList([PypStr(y) for y in raw_variable])
                 split_variables[name] = pyp_list

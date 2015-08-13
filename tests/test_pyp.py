@@ -1,16 +1,22 @@
 import imp
 import unittest
 from mock import patch
-from io import BytesIO
+from io import BytesIO, StringIO
+import six
 
 pyp = imp.load_source('pyp', 'pyp')
+
+if six.PY2:
+    Stream = BytesIO
+else:
+    Stream = StringIO
 
 
 class TestPypLargeFile(unittest.TestCase):
 
     class fakeOptparse(object):
         pass
-    
+
     def _toPypStr(self, a):
         return [[pyp.PypStr(x.strip())] for x in a if x.strip()]
 
@@ -36,33 +42,32 @@ class TestPypLargeFile(unittest.TestCase):
         argLine = ['p']
         expectedOut = 'the quick brown fox\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
-  
-    
+
     def test_slashes(self):
         inputs = self._toPypStr(['foo/bar'])
         argLine = ['s']
         expectedOut = 'foo\tbar\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
-     
+
         argLine = ['slash']
         expectedOut = 'foo\tbar\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
-     
+
     def test_index(self):
         inputs = self._toPypStr(['foo/bar'])
         argLine = ['s[0]']
         expectedOut = 'foo\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
 
@@ -70,16 +75,16 @@ class TestPypLargeFile(unittest.TestCase):
         argLine = ['w[0]']
         expectedOut = 'foo\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
-      
+
     def test_single_pipe(self):
         inputs = self._toPypStr(['foo/bar'])
         argLine = ['s', 'u']
         expectedOut = 'foo_bar\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
 
@@ -88,7 +93,7 @@ class TestPypLargeFile(unittest.TestCase):
         argLine = [''' '_'.join(p.split('/')) ''']
         expectedOut = 'foo_bar\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
 
@@ -97,7 +102,7 @@ class TestPypLargeFile(unittest.TestCase):
         argLine = ['s[1] + s[3]']
         expectedOut = 'bar\tbar1\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
 
@@ -106,26 +111,25 @@ class TestPypLargeFile(unittest.TestCase):
         argLine = ['(s[1] + s[3])']
         expectedOut = 'barbar1\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
 
- 
     def test_parens_index(self):
         inputs = self._toPypStr(['foo/bar/foo1_bar1'])
         argLine = ['(s[1] + u[1])[1]']
         expectedOut = 'a\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
- 
+
     def test_addition_index(self):
         inputs = self._toPypStr(['foo/bar/foo1_bar1'])
         argLine = ['s[1] + u[1]', 'p[1]']
         expectedOut = 'bar1\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
 
@@ -134,7 +138,7 @@ class TestPypLargeFile(unittest.TestCase):
         argLine = ['(s[1] + u[1])', 'p[1]']
         expectedOut = 'a\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
 
@@ -143,17 +147,16 @@ class TestPypLargeFile(unittest.TestCase):
         argLine = ['p.re(\'[0-9a-fA-F]+\')']
         expectedOut = 'AbCd1234\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
-
 
     def test_replace(self):
         inputs = self._toPypStr(['foobar'])
         argLine = [''' p.replace('foo', 'bar') ''']
         expectedOut = 'barbar\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
 
@@ -162,7 +165,7 @@ class TestPypLargeFile(unittest.TestCase):
         argLine = [''' '%s %s' % (w[1], w[0]) ''']
         expectedOut = 'bar foo\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
 
@@ -171,7 +174,7 @@ class TestPypLargeFile(unittest.TestCase):
         argLine = [''' '%d_%s' % (int(p.digits()[0]), s[0]) ''']
         expectedOut = '123_abc\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
 
@@ -180,7 +183,7 @@ class TestPypLargeFile(unittest.TestCase):
         argLine = [''' p.kill('foobar') ''']
         expectedOut = 'foo bar\nFoo Bar\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
 
@@ -189,25 +192,29 @@ class TestPypLargeFile(unittest.TestCase):
         argLine = ['p.upper()']
         expectedOut = 'FOO BAR\nFOOBAR\nFOO BAR\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
 
     def test_file(self):
-        inputs = self._toPypStr(['/home/abc/foobar.txt', '/usr/local/helloworld.psd', 'barfoo.csv'])
+        inputs = self._toPypStr(
+            ['/home/abc/foobar.txt', '/usr/local/helloworld.psd', 'barfoo.csv']
+        )
         argLine = ['p.file()']
         expectedOut = 'foobar.txt\nhelloworld.psd\nbarfoo.csv\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
 
     def test_dir(self):
-        inputs = self._toPypStr(['/home/abc/foobar.txt', '/usr/local/helloworld.psd', 'barfoo.csv'])
+        inputs = self._toPypStr(
+            ['/home/abc/foobar.txt', '/usr/local/helloworld.psd', 'barfoo.csv']
+        )
         argLine = ['p.dir()']
         expectedOut = '/home/abc\n/usr/local\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
 
@@ -216,7 +223,7 @@ class TestPypLargeFile(unittest.TestCase):
         argLine = ['p.digits()']
         expectedOut = '123\t321\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
 
@@ -225,7 +232,7 @@ class TestPypLargeFile(unittest.TestCase):
         argLine = ['p.isdigit()']
         expectedOut = '123\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
 
@@ -234,7 +241,7 @@ class TestPypLargeFile(unittest.TestCase):
         argLine = ['not p.isdigit()']
         expectedOut = 'abc123abc321\n123.0\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
 
@@ -243,24 +250,24 @@ class TestPypLargeFile(unittest.TestCase):
         argLine = [''' keep('321') ''']
         expectedOut = 'abc123abc321\nfoo321bar\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
-        
+
         inputs = self._toPypStr(['abc123abc321', '123', '123.0', 'foo321bar'])
         argLine = [''' k('321') ''']
         expectedOut = 'abc123abc321\nfoo321bar\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
-        
+
     def test_lose(self):
         inputs = self._toPypStr(['abc123abc321', '123', '123.0', 'foo321bar'])
         argLine = [''' lose('321') ''']
         expectedOut = '123\n123.0\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
 
@@ -268,28 +275,30 @@ class TestPypLargeFile(unittest.TestCase):
         argLine = [''' l('321') ''']
         expectedOut = '123\n123.0\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
 
     def test_trim(self):
 
-        inputs = self._toPypStr(['/home/abc/foobar.txt', '/usr/local/helloworld.psd', 'barfoo.csv'])
+        inputs = self._toPypStr(
+            ['/home/abc/foobar.txt', '/usr/local/helloworld.psd', 'barfoo.csv']
+        )
         argLine = ['p.trim()']
         expectedOut = '/home/abc\n/usr/local\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
 
     def test_type_and_dir(self):
 
-        inputs = self._toPypStr(['/home/abc/foobar.txt', '/usr/local/helloworld.psd', 'barfoo.csv'])
+        inputs = self._toPypStr(
+            ['/home/abc/foobar.txt', '/usr/local/helloworld.psd', 'barfoo.csv']
+        )
         argLine = ['p.trim()']
         expectedOut = '/home/abc\n/usr/local\n'
 
-        with patch('sys.stdout', new=BytesIO()) as cap_stdout:
+        with patch('sys.stdout', new=Stream()) as cap_stdout:
             self.pypObj.processLarge(inputs, [], argLine, [])
             self.assertEquals(cap_stdout.getvalue(), expectedOut)
-
-
